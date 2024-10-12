@@ -5,7 +5,7 @@ import (
 
 	"github.com/mohdjishin/SplitWise/config"
 	"github.com/mohdjishin/SplitWise/internal/models"
-	"github.com/mohdjishin/SplitWise/logger"
+	log "github.com/mohdjishin/SplitWise/logger"
 	"go.uber.org/zap/zapcore"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -43,19 +43,19 @@ func init() {
 	_ = GetDbManagerInstance()
 }
 func (m *DBManager) Connect() {
-	logger.LoggerInstance.Info("Connecting to database")
+	log.Info("Connecting to database")
 	var err error
 	m.db, err = gorm.Open(postgres.Open(config.GetConfig().DSN), &gorm.Config{})
 	if err != nil {
-		logger.LoggerInstance.Fatal("failed to connect to database", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
+		log.Fatal("failed to connect to database", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
 	}
-	logger.LoggerInstance.Info("Connected to database")
-	logger.LoggerInstance.Info("Migrating database")
+	log.Info("Connected to database")
+	log.Info("Migrating database")
 	err = m.db.AutoMigrate(&models.User{}, &models.Group{}, models.BillHistory{}, &models.Bill{}, &models.GroupMember{})
 	if err != nil {
-		logger.LoggerInstance.Fatal("failed to migrate database", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
+		log.Fatal("failed to migrate database", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
 	}
-	logger.LoggerInstance.Info("Database migration successful")
+	log.Info("Database migration successful")
 }
 
 func (m *DBManager) GetDB() *gorm.DB {

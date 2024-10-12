@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/mohdjishin/SplitWise/config"
 	"github.com/mohdjishin/SplitWise/internal/errors"
-	"github.com/mohdjishin/SplitWise/logger"
+	log "github.com/mohdjishin/SplitWise/logger"
 	"go.uber.org/zap"
 )
 
@@ -25,14 +25,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get(authorization)
 		if authHeader == "" {
-			logger.LoggerInstance.Error("Authorization header not found")
+			log.Error("Authorization header not found")
 			w.WriteHeader(http.StatusUnauthorized)
 			_ = json.NewEncoder(w).Encode(errors.ErrUnauthorizationHeaderNotFound)
 			return
 		}
 		parts := strings.Split(authHeader, "Bearer ")
 		if len(parts) != 2 || strings.TrimSpace(parts[1]) == "" {
-			logger.LoggerInstance.Error("Invalid token")
+			log.Error("Invalid token")
 			w.WriteHeader(http.StatusUnauthorized)
 			_ = json.NewEncoder(w).Encode(errors.ErrInvalidAuthHeader)
 			return
@@ -44,7 +44,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil || !token.Valid {
-			logger.LoggerInstance.Error("Invalid token", zap.Any("error", err))
+			log.Error("Invalid token", zap.Any("error", err))
 			w.WriteHeader(http.StatusUnauthorized)
 			_ = json.NewEncoder(w).Encode(errors.ErrInvalidToken)
 			return

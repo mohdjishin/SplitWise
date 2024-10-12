@@ -1,10 +1,9 @@
 package config
 
 import (
-	"log"
 	"time"
 
-	"github.com/mohdjishin/SplitWise/logger"
+	log "github.com/mohdjishin/SplitWise/logger"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -13,7 +12,7 @@ type Config struct {
 	Port      string `mapstructure:"port"`
 	JwtString string `mapstructure:"jwtString"`
 	DSN       string `mapstructure:"dsn"`
-	LogLevel  string `mapstructure:"logLevel"`
+	LogLevel  string `mapstructure:"logLevel"` // not used as of now kept in .env to change it dynamically from docker env
 	ENV       string `mapstructure:"env"`
 }
 
@@ -27,11 +26,11 @@ func init() {
 	maxRetries := 5
 	for retries := 0; retries < maxRetries; retries++ {
 		if err := viper.ReadInConfig(); err != nil {
-			logger.LoggerInstance.Error("Error reading config file: %v. Retrying in 5 seconds...", zap.Any("error", err))
+			log.Error("Error reading config file: %v. Retrying in 5 seconds...", zap.Any("error", err))
 			time.Sleep(5 * time.Second)
 		} else {
 			if err := viper.Unmarshal(&config); err != nil {
-				log.Panic("Error unmarshalling config: ", err)
+				log.Panic("Error unmarshalling config: ", zap.Error(err))
 			}
 			return
 		}

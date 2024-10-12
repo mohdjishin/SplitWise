@@ -7,7 +7,7 @@ import (
 	_ "github.com/mohdjishin/SplitWise/docs"
 	_ "github.com/mohdjishin/SplitWise/internal/db"
 	"github.com/mohdjishin/SplitWise/internal/routes"
-	"github.com/mohdjishin/SplitWise/logger"
+	log "github.com/mohdjishin/SplitWise/logger"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -18,14 +18,20 @@ import (
 // @BasePath /
 func main() {
 	if err := run(); err != nil {
-		logger.LoggerInstance.Error("Error starting server", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
+		log.Error("Error starting server", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
+		return
 	}
-
 }
 
 func run() error {
-	defer logger.LoggerInstance.Sync()
+	defer log.Sync()
+
 	port := config.GetConfig().Port
-	logger.LoggerInstance.Info("Starting server on port " + port)
-	return http.ListenAndServe(":"+port, routes.NewRouter())
+	log.Info("Starting server on port " + port)
+
+	serverAddr := ":" + port
+	if err := http.ListenAndServe(serverAddr, routes.NewRouter()); err != nil {
+		return err
+	}
+	return nil
 }

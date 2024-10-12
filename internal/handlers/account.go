@@ -11,7 +11,7 @@ import (
 	"github.com/mohdjishin/SplitWise/internal/errors"
 	"github.com/mohdjishin/SplitWise/internal/models"
 	"github.com/mohdjishin/SplitWise/internal/models/dto"
-	"github.com/mohdjishin/SplitWise/logger"
+	log "github.com/mohdjishin/SplitWise/logger"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -32,13 +32,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	var input dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		logger.LoggerInstance.Error("Error decoding request body", zap.Any("error", err))
+		log.Error("Error decoding request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode((errors.ErrBadRequest))
 		return
 	}
 	if err := validate.ValidateStruct(input); err != nil {
-		logger.LoggerInstance.Error("Error validating request body", zap.Any("error", err))
+		log.Error("Error validating request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(errors.ErrValidationFailed(err.Error()))
 		return
@@ -49,7 +49,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	tx := db.GetDb().Create(&user)
 	if tx.Error != nil {
-		logger.LoggerInstance.Error("Error creating user", zap.Any("error", tx.Error))
+		log.Error("Error creating user", zap.Any("error", tx.Error))
 		if e.Is(tx.Error, gorm.ErrDuplicatedKey) {
 			w.WriteHeader(http.StatusConflict)
 			_ = json.NewEncoder(w).Encode(errors.ErrUserAlreadyExists)
@@ -59,7 +59,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	logger.LoggerInstance.Info("User registered", zap.String("email", user.Email))
+	log.Info("User registered", zap.String("email", user.Email))
 	// TODO: Creating a Response Model.
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": "User registered"})
 }
@@ -79,27 +79,27 @@ func Register(w http.ResponseWriter, r *http.Request) {
 func Login(w http.ResponseWriter, r *http.Request) {
 	var input dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		logger.LoggerInstance.Error("Error decoding request body", zap.Any("error", err))
+		log.Error("Error decoding request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode((errors.ErrBadRequest))
 		return
 	}
 	if err := validate.ValidateStruct(input); err != nil {
-		logger.LoggerInstance.Error("Error validating request body", zap.Any("error", err))
+		log.Error("Error validating request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(errors.ErrValidationFailed(err.Error()))
 		return
 	}
 	var user models.User
 	if err := db.GetDb().Where("email = ?", input.Email).First(&user).Error; err != nil {
-		logger.LoggerInstance.Error("Error fetching user", zap.Any("error", err))
+		log.Error("Error fetching user", zap.Any("error", err))
 		w.WriteHeader(http.StatusUnauthorized)
 		_ = json.NewEncoder(w).Encode(errors.ErrInvalidCredential)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		logger.LoggerInstance.Error("Error comparing password", zap.Any("error", err))
+		log.Error("Error comparing password", zap.Any("error", err))
 		w.WriteHeader(http.StatusUnauthorized)
 		_ = json.NewEncoder(w).Encode(errors.ErrInvalidCredential)
 		return
@@ -108,7 +108,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	token, err := jUtil.GenerateToken(user.ID)
 
 	if err != nil {
-		logger.LoggerInstance.Error("Error generating token", zap.Any("error", err))
+		log.Error("Error generating token", zap.Any("error", err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalServerError)
 	}

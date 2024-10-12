@@ -12,7 +12,7 @@ import (
 	"github.com/mohdjishin/SplitWise/internal/middleware"
 	"github.com/mohdjishin/SplitWise/internal/models"
 	dto "github.com/mohdjishin/SplitWise/internal/models/dto"
-	"github.com/mohdjishin/SplitWise/logger"
+	log "github.com/mohdjishin/SplitWise/logger"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -21,13 +21,13 @@ func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 
 	var input dto.CreateGroupWithBillRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		logger.LoggerInstance.Error("Error decoding request body", zap.Any("error", err))
+		log.Error("Error decoding request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(errors.ErrBadRequest)
 		return
 	}
 	if err := validate.ValidateStruct(input); err != nil {
-		logger.LoggerInstance.Error("Error validating request body", zap.Any("error", err))
+		log.Error("Error validating request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(errors.ErrValidationFailed(err.Error()))
 		return
@@ -40,7 +40,7 @@ func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 		CreatedBy: uint(userId),
 	}
 	if err := db.GetDb().Create(&group).Error; err != nil {
-		logger.LoggerInstance.Error("Failed to create group", zap.Error(err))
+		log.Error("Failed to create group", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 
@@ -52,7 +52,7 @@ func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 		UserID:  uint(userId),
 	}
 	if err := db.GetDb().Create(&groupMember).Error; err != nil {
-		logger.LoggerInstance.Error("Failed to add creator to group", zap.Error(err))
+		log.Error("Failed to add creator to group", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
@@ -64,7 +64,7 @@ func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 		GroupID: group.ID,
 	}
 	if err := db.GetDb().Create(&bill).Error; err != nil {
-		logger.LoggerInstance.Error("Failed to create bill", zap.Error(err))
+		log.Error("Failed to create bill", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
@@ -72,7 +72,7 @@ func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 
 	group.BillID = bill.ID
 	if err := db.GetDb().Save(&group).Error; err != nil {
-		logger.LoggerInstance.Error("Failed to update group with bill", zap.Error(err))
+		log.Error("Failed to update group with bill", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
@@ -92,7 +92,7 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.GetDb().Where("id = ?", groupID).First(&group).Error; err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		logger.LoggerInstance.Error("Group not found", zap.Error(err))
+		log.Error("Group not found", zap.Error(err))
 		_ = json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
 		return
 	}
@@ -105,7 +105,7 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.GetDb().Delete(&group).Error; err != nil {
-		logger.LoggerInstance.Error("Failed to delete group", zap.Error(err))
+		log.Error("Failed to delete group", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
@@ -126,7 +126,7 @@ func ListOwnedGroups(w http.ResponseWriter, r *http.Request) {
 		Find(&groups).Error
 
 	if err != nil {
-		logger.LoggerInstance.Error("Failed to fetch groups", zap.Error(err))
+		log.Error("Failed to fetch groups", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
@@ -160,13 +160,13 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 
 	var input dto.AddUsersToGroupRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		logger.LoggerInstance.Error("Invalid request payload", zap.Error(err))
+		log.Error("Invalid request payload", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(errors.ErrBadRequest)
 		return
 	}
 	if err := validate.ValidateStruct(input); err != nil {
-		logger.LoggerInstance.Error("Error validating request body", zap.Error(err))
+		log.Error("Error validating request body", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(errors.ErrValidationFailed(err.Error()))
 		return
@@ -174,7 +174,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 	userId := middleware.GetCurrentUserId(r)
 	var group models.Group
 	if err := db.GetDb().Where("id = ? AND created_by = ?", groupID, userId).First(&group).Error; err != nil {
-		logger.LoggerInstance.Error("Group not found", zap.Error(err))
+		log.Error("Group not found", zap.Error(err))
 		w.WriteHeader(http.StatusNotFound)
 		_ = json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
 		return
@@ -208,7 +208,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 			UserID:  userList[userID],
 		}
 		if err := db.GetDb().Create(&newGroupMember).Error; err != nil {
-			logger.LoggerInstance.Error("Failed to add user to group", zap.Error(err))
+			log.Error("Failed to add user to group", zap.Error(err))
 			w.WriteHeader(http.StatusNotFound)
 			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 			return
@@ -217,7 +217,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 
 	var groupMembers []models.GroupMember
 	if err := db.GetDb().Where("group_id = ?", groupID).Find(&groupMembers).Error; err != nil {
-		logger.LoggerInstance.Error("Failed to fetch group members", zap.Error(err))
+		log.Error("Failed to fetch group members", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrWhileFetchingMembers)
 		return
@@ -225,7 +225,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 
 	var bill models.Bill
 	if err := db.GetDb().Where("id = ?", group.BillID).First(&bill).Error; err != nil {
-		logger.LoggerInstance.Error("Failed to fetch bill", zap.Error(err))
+		log.Error("Failed to fetch bill", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrWhileFetchingBill)
 		return
@@ -238,7 +238,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 		group.PerUserSplitAmount = perUserSplitAmount
 
 		if err := db.GetDb().Save(&group).Error; err != nil {
-			logger.LoggerInstance.Error("Failed to update group with total and per-user split amounts", zap.Error(err))
+			log.Error("Failed to update group with total and per-user split amounts", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(errors.ErrInternalErrorWithMessage("Failed to update total and per-user split amounts"))
 			return
@@ -247,7 +247,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 		for _, member := range groupMembers {
 			member.SplitAmount = perUserSplitAmount
 			if err := db.GetDb().Save(&member).Error; err != nil {
-				logger.LoggerInstance.Error("Failed to update member split amount", zap.Error(err))
+				log.Error("Failed to update member split amount", zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
 				_ = json.NewEncoder(w).Encode(errors.ErrInternalErrorWithMessage("Failed to update split amount for members"))
 				return
@@ -294,7 +294,7 @@ func ListMemberGroups(w http.ResponseWriter, r *http.Request) {
 
 	err := query.Find(&groups).Error
 	if err != nil {
-		logger.LoggerInstance.Error("Failed to fetch groups", zap.Error(err))
+		log.Error("Failed to fetch groups", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
@@ -305,7 +305,7 @@ func ListMemberGroups(w http.ResponseWriter, r *http.Request) {
 		var members []models.GroupMember
 		err = db.GetDb().Where("group_id IN (?)", getGroupIDs(groups)).Find(&members).Error
 		if err != nil {
-			logger.LoggerInstance.Error("Failed to fetch group members", zap.Error(err))
+			log.Error("Failed to fetch group members", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 			return
@@ -351,11 +351,11 @@ func GetPendingPayments(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.GetDb().Where("user_id = ? AND has_paid = ?", userId, false).Find(&groupMembers).Error; err != nil {
 		if e.Is(err, gorm.ErrRecordNotFound) {
-			logger.LoggerInstance.Warn("No pending payments found", zap.Float64("userId", userId))
+			log.Warn("No pending payments found", zap.Float64("userId", userId))
 			w.WriteHeader(http.StatusNotFound)
 			_ = json.NewEncoder(w).Encode(errors.ErrNoPendingPayments)
 		} else {
-			logger.LoggerInstance.Error("Failed to fetch pending payments", zap.Error(err))
+			log.Error("Failed to fetch pending payments", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		}
@@ -368,7 +368,7 @@ func GetPendingPayments(w http.ResponseWriter, r *http.Request) {
 	for _, member := range groupMembers {
 		var group models.Group
 		if err := db.GetDb().Where("id = ?", member.GroupID).First(&group).Error; err != nil {
-			logger.LoggerInstance.Error("Failed to fetch group", zap.Error(err))
+			log.Error("Failed to fetch group", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 			return
@@ -376,7 +376,7 @@ func GetPendingPayments(w http.ResponseWriter, r *http.Request) {
 
 		var bill models.Bill
 		if err := db.GetDb().Where("id = ?", group.BillID).First(&bill).Error; err != nil {
-			logger.LoggerInstance.Error("Failed to fetch bill", zap.Error(err))
+			log.Error("Failed to fetch bill", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 			return

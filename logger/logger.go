@@ -99,7 +99,35 @@ func (l *Logger) Error(msg string, fields ...zap.Field) {
 func (l *Logger) Fatal(msg string, fields ...zap.Field) {
 	l.zapLogger.Fatal(msg, fields...)
 }
+func (l *Logger) Panic(msg string, fields ...zap.Field) {
+	l.zapLogger.Panic(msg, fields...)
+}
 
 func (l *Logger) Sync() {
 	_ = l.zapLogger.Sync()
+}
+
+// wrapper func's
+func Info(msg string, fields ...zap.Field) {
+	LoggerInstance.Info(msg, fields...)
+}
+func Warn(msg string, fields ...zap.Field) {
+	LoggerInstance.Warn(msg, fields...)
+}
+func Debug(msg string, fields ...zap.Field) {
+	LoggerInstance.Debug(msg, fields...)
+}
+func Error(msg string, fields ...zap.Field) {
+	LoggerInstance.Error(msg, fields...)
+}
+func Fatal(msg string, fields ...zap.Field) {
+	LoggerInstance.Fatal(msg, fields...)
+}
+func Panic(msg string, fields ...zap.Field) {
+	LoggerInstance.Panic(msg, fields...)
+}
+
+// sunc is not needed as of now. can be used in main.go
+func Sync() {
+	LoggerInstance.Sync()
 }
