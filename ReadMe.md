@@ -1,4 +1,4 @@
-*# SplitWise
+# SplitWise
 
 ## Installation and Setup
 
