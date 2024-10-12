@@ -1,4 +1,4 @@
-# SplitWise
+*# SplitWise
 
 ## Installation and Setup
 
@@ -129,5 +129,3 @@ curl -X POST http://localhost:8080/v1/groups/report \
 }' \
 --output report.pdf
 ```
-
-
