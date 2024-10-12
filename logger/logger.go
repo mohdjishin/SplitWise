@@ -101,5 +101,5 @@ func (l *Logger) Fatal(msg string, fields ...zap.Field) {
 }
 
 func (l *Logger) Sync() {
-	l.zapLogger.Sync()
+	_ = l.zapLogger.Sync()
 }
