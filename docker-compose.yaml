@@ -4,11 +4,11 @@ services:
     app:
         build: .
         ports:
-            - "8081:8081"
+            - "8080:8080"
         environment:
-            - PORT=8081
+            # - PORT=8080
             # - JWT_STRING=SplitWiseTestJwtSignString
-            - DSN=host=db user=myuser password=mypassword dbname=mydatabase port=5432 sslmode=disable
+            - DSN=host=db user=myuser password=mypassword dbname=mydb port=5432 sslmode=disable
         depends_on:
             - db
         networks:
@@ -19,7 +19,7 @@ services:
         environment:
             POSTGRES_USER: myuser
             POSTGRES_PASSWORD: mypassword
-            POSTGRES_DB: mydatabase
+            POSTGRES_DB: mydb
         volumes:
             - pgdata:/var/lib/postgresql/data
         ports:
