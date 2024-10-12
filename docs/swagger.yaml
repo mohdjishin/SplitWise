@@ -1,0 +1,305 @@
+basePath: /
+definitions:
+  dto.GetGroupReportRequest:
+    description: Request model for generating a group report based on date range.
+    properties:
+      from:
+        type: string
+      to:
+        type: string
+    type: object
+  dto.ListMemberGroupsResponse:
+    description: Response model for listing groups the user belongs to, including
+      group details and member information.
+    properties:
+      group:
+        $ref: '#/definitions/models.Group'
+      members:
+        items:
+          $ref: '#/definitions/models.GroupMember'
+        type: array
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        example: jis@jish.com
+        type: string
+      password:
+        example: Passw0rd@123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  errors.Error:
+    description: Error model for handling errors.
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  models.Bill:
+    properties:
+      amount:
+        description: Total amount
+        type: number
+      completed:
+        description: Overall bill payment status
+        type: boolean
+      groupId:
+        description: Reference to the associated group
+        type: integer
+      history:
+        description: Bill payment history
+        items:
+          $ref: '#/definitions/models.BillHistory'
+        type: array
+      name:
+        type: string
+    type: object
+  models.BillHistory:
+    properties:
+      amount:
+        description: Amount related to this history entry
+        type: number
+      billId:
+        description: Automatically inferred foreign key
+        type: integer
+      createdAt:
+        description: Auto-create timestamp
+        type: string
+      id:
+        type: integer
+      paidAt:
+        description: Time of payment
+        type: string
+      paidBy:
+        description: User who made the payment
+        type: string
+    type: object
+  models.Group:
+    properties:
+      bill:
+        $ref: '#/definitions/models.Bill'
+      billId:
+        type: integer
+      createdAt:
+        type: string
+      createdBy:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      paidAmount:
+        type: number
+      perUserSplitAmount:
+        type: number
+      status:
+        type: string
+      totalAmount:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  models.GroupMember:
+    properties:
+      createdAt:
+        type: string
+      groupId:
+        type: integer
+      hasPaid:
+        description: Tracks if the member has paid
+        type: boolean
+      id:
+        type: integer
+      remarks:
+        type: string
+      splitAmount:
+        type: number
+      updatedAt:
+        type: string
+      userId:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is an API for managing splits.
+  title: SplitWise API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user with email and password.
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User logged in successfully, returns token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized - Invalid credentials
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login a user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user with email, password, and name. Returns conflict
+        error if email already exists.
+      parameters:
+      - description: User details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User registered
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: ' Bad Request'
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Register a new user
+      tags:
+      - auth
+  /groups/member-groups:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all groups associated with the authenticated user. Optionally
+        filters the results by group status. If no status is provided, all groups
+        will be returned.
+      parameters:
+      - description: The status of the groups to filter by. Valid values are 'PENDING'
+          or 'DONE'
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response with the list of groups.
+          schema:
+            items:
+              $ref: '#/definitions/dto.ListMemberGroupsResponse'
+            type: array
+        "400":
+          description: Invalid status parameter provided.
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: List groups the user belongs to
+      tags:
+      - groups
+  /v1/groups/report:
+    post:
+      consumes:
+      - application/json
+      description: Generates and downloads a PDF report for the groups created by
+        the user within a specified date range.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: from date in the format YYYY-MM-DD
+        in: query
+        name: from
+        type: string
+      - description: to date in the format YYYY-MM-DD
+        in: query
+        name: to
+        type: string
+      - description: GetGroupReportRequest details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetGroupReportRequest'
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: PDF report generated and downloaded
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Download PDF report of user's groups
+      tags:
+      - reports
+swagger: "2.0"
