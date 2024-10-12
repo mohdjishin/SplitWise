@@ -27,14 +27,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if authHeader == "" {
 			logger.LoggerInstance.Error("Authorization header not found")
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(errors.ErrUnauthorizationHeaderNotFound)
+			_ = json.NewEncoder(w).Encode(errors.ErrUnauthorizationHeaderNotFound)
 			return
 		}
 		parts := strings.Split(authHeader, "Bearer ")
 		if len(parts) != 2 || strings.TrimSpace(parts[1]) == "" {
 			logger.LoggerInstance.Error("Invalid token")
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(errors.ErrInvalidAuthHeader)
+			_ = json.NewEncoder(w).Encode(errors.ErrInvalidAuthHeader)
 			return
 		}
 		tokenString := strings.TrimSpace(parts[1])
@@ -46,7 +46,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if err != nil || !token.Valid {
 			logger.LoggerInstance.Error("Invalid token", zap.Any("error", err))
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(errors.ErrInvalidToken)
+			_ = json.NewEncoder(w).Encode(errors.ErrInvalidToken)
 			return
 		}
 		ctx := context.WithValue(r.Context(), ContextuserIdKey, (*claims)["id"].(float64))

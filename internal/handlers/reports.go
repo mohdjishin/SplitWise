@@ -42,7 +42,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.LoggerInstance.Error("Invalid request payload", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(errors.ErrInvalidInput)
+		_ = json.NewEncoder(w).Encode(errors.ErrInvalidInput)
 		return
 	}
 	userId := middleware.GetCurrentUserId(r)
@@ -52,11 +52,11 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 		if e.Is(err, gorm.ErrRecordNotFound) {
 			logger.LoggerInstance.Info("No user found", zap.Float64("user_id", userId))
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(errors.ErrUserNotFound)
+			_ = json.NewEncoder(w).Encode(errors.ErrUserNotFound)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(errors.ErrInternalError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
 	}
 
@@ -71,7 +71,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			logger.LoggerInstance.Error("Invalid from date format", zap.Error(err))
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(errors.ErrInvalid("invalid from date format"))
+			_ = json.NewEncoder(w).Encode(errors.ErrInvalid("invalid from date format"))
 			return
 		}
 	} else {
@@ -83,7 +83,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			logger.LoggerInstance.Error("Invalid to date format", zap.Error(err))
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(errors.ErrInvalid("invalid to date format"))
+			_ = json.NewEncoder(w).Encode(errors.ErrInvalid("invalid to date format"))
 			return
 		}
 	} else {
@@ -104,7 +104,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.LoggerInstance.Error("Database query failed", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(errors.ErrInternalError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
 	}
 	defer rows.Close()
@@ -134,7 +134,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			logger.LoggerInstance.Error("Failed to scan row data", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(errors.ErrInternalError)
+			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 			return
 		}
 
@@ -146,7 +146,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 	if len(grpInfo) == 0 {
 		logger.LoggerInstance.Info("No groups found for user", zap.Float64("user_id", userId))
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
+		_ = json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
 		return
 	}
 
@@ -156,7 +156,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 	if err := pdfResponse.Output(&buf); err != nil {
 		logger.LoggerInstance.Error("Failed to generate PDF", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(errors.ErrInternalError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
 	}
 
@@ -169,7 +169,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.LoggerInstance.Error("Failed to write PDF to response", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(errors.ErrInternalError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 
 	}
 }

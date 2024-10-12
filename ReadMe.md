@@ -9,7 +9,7 @@
 ### Steps
 
 1. Clone the repository
-2. Run `docker-compose up` in the root directory of the project
+2. Run `docker compose up --build` in the root directory of the project
 
 ## Step to run locally without Docker
 
@@ -27,11 +27,12 @@
 
 ## Usage Examples
 
+## API Documentation
+For interactive API documentation, visit [Swagger UI](http://localhost:8080/swagger/index.html) once the application is running.
 
 ### Ping 
 ```bash
 curl -I -X GET http://localhost:8080/ping
-
 ```
 
 ### Register User
@@ -75,16 +76,17 @@ curl -X POST http://localhost:8080/v1/groups \
 ### Delete group 
 
 ```bash
+#  not needed as of now. 
 curl -X DELETE http://localhost:8080/v1/groups/{groupID} \
 -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 
 ```
 
 ### List group by owner
-    ```bash
-    curl -X GET http://localhost:8080/v1/groups \
-    -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-    ```
+```bash
+curl -X GET http://localhost:8080/v1/groups \
+-H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+```
 
 ### Add users to group.
 
@@ -93,7 +95,7 @@ curl -X POST http://localhost:8080/v1/groups/{groupID}/addMembers \
 -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
 -H "Content-Type: application/json" \
 -d '{
-    "userIds": [userIdThree, userIdTwo, userIdOne]
+    "userEmailIds": [emailOne, emailTwo, emailthree.....]
 }'
 ```
 
@@ -127,3 +129,5 @@ curl -X POST http://localhost:8080/v1/groups/report \
 }' \
 --output report.pdf
 ```
+
+

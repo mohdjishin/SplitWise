@@ -12,8 +12,8 @@ var validate *validator.Validate
 
 func init() {
 	validate = validator.New()
-	validate.RegisterValidation("password_complexity", passwordComplexity)
-	validate.RegisterValidation("dateFormat", validateDateFormat)
+	_ = validate.RegisterValidation("password_complexity", passwordComplexity)
+	_ = validate.RegisterValidation("dateFormat", validateDateFormat)
 }
 
 func ValidateStruct(s interface{}) error {

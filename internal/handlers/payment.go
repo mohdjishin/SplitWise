@@ -25,7 +25,7 @@ func MarkPayment(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.LoggerInstance.Error("Invalid request payload", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(errors.ErrInvalidInput)
+		_ = json.NewEncoder(w).Encode(errors.ErrInvalidInput)
 		return
 	}
 
@@ -35,14 +35,14 @@ func MarkPayment(w http.ResponseWriter, r *http.Request) {
 	if err := db.GetDb().Where("group_id = ? AND user_id = ?", input.GroupID, userID).First(&groupMember).Error; err != nil {
 		logger.LoggerInstance.Error("Group member not found", zap.Error(err))
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
+		_ = json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
 		return
 	}
 
 	if groupMember.HasPaid {
 		logger.LoggerInstance.Warn("Payment already made by user", zap.Float64("user_id", userID))
 		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(errors.ErrPaymentAlreadyMade)
+		_ = json.NewEncoder(w).Encode(errors.ErrPaymentAlreadyMade)
 		return
 	}
 
@@ -51,7 +51,7 @@ func MarkPayment(w http.ResponseWriter, r *http.Request) {
 	if err := db.GetDb().Save(&groupMember).Error; err != nil {
 		logger.LoggerInstance.Error("Failed to update payment status", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(errors.ErrPaymentFailed)
+		_ = json.NewEncoder(w).Encode(errors.ErrPaymentFailed)
 		return
 	}
 
@@ -59,7 +59,7 @@ func MarkPayment(w http.ResponseWriter, r *http.Request) {
 	if err := db.GetDb().Where("id = ?", input.GroupID).First(&group).Error; err != nil {
 		logger.LoggerInstance.Error("Group not found", zap.Error(err))
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
+		_ = json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
 		return
 	}
 
@@ -73,7 +73,7 @@ func MarkPayment(w http.ResponseWriter, r *http.Request) {
 			if err := db.GetDb().Save(&bill).Error; err != nil {
 				logger.LoggerInstance.Error("Failed to mark bill as completed", zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
-				json.NewEncoder(w).Encode(errors.ErrBillCompletionFailed)
+				_ = json.NewEncoder(w).Encode(errors.ErrBillCompletionFailed)
 				return
 			}
 		}
@@ -83,7 +83,7 @@ func MarkPayment(w http.ResponseWriter, r *http.Request) {
 	if err := db.GetDb().Save(&group).Error; err != nil {
 		logger.LoggerInstance.Error("Failed to update group paid amount", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(errors.ErrGroupUpdateFailed)
+		_ = json.NewEncoder(w).Encode(errors.ErrGroupUpdateFailed)
 		return
 	}
 	var user models.User
@@ -97,11 +97,10 @@ func MarkPayment(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	helper.LogBillHistory(group.BillID, groupMember.SplitAmount, user.Name)
+	_ = helper.LogBillHistory(group.BillID, groupMember.SplitAmount, user.Name)
 
-	// Response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "Payment marked successfully",
 	})
 }
