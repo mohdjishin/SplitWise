@@ -31,6 +31,27 @@ definitions:
     - email
     - password
     type: object
+  dto.PendingPayments:
+    properties:
+      amount:
+        type: number
+      billId:
+        type: integer
+      groupId:
+        type: integer
+      groupName:
+        type: string
+    type: object
+  dto.PendingPaymentsWithTotalResponse:
+    description: Response model for listing pending payments with total amount.
+    properties:
+      pendingPayments:
+        items:
+          $ref: '#/definitions/dto.PendingPayments'
+        type: array
+      totalAmount:
+        type: number
+    type: object
   dto.RegisterRequest:
     properties:
       email:
@@ -221,7 +242,7 @@ paths:
       summary: Register a new user
       tags:
       - auth
-  /groups/member-groups:
+  /v1/groups/member-groups:
     get:
       consumes:
       - application/json
@@ -252,6 +273,31 @@ paths:
           schema:
             $ref: '#/definitions/errors.Error'
       summary: List groups the user belongs to
+      tags:
+      - groups
+  /v1/groups/pending-payments:
+    get:
+      consumes:
+      - application/json
+      description: Fetches all pending payments for the current user that have not
+        been paid yet, including group ID, group name, bill ID, and amount owed.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response containing the list of pending payments
+            and total amount.
+          schema:
+            $ref: '#/definitions/dto.PendingPaymentsWithTotalResponse'
+        "404":
+          description: No pending payments found for the user.
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal server error occurred while fetching pending payments.
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Retrieve Pending Payments
       tags:
       - groups
   /v1/groups/report:

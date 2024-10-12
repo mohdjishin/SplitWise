@@ -128,7 +128,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/groups/member-groups": {
+        "/v1/groups/member-groups": {
             "get": {
                 "description": "Retrieves all groups associated with the authenticated user. Optionally filters the results by group status. If no status is provided, all groups will be returned.",
                 "consumes": [
@@ -167,6 +167,41 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error.",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/groups/pending-payments": {
+            "get": {
+                "description": "Fetches all pending payments for the current user that have not been paid yet, including group ID, group name, bill ID, and amount owed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "groups"
+                ],
+                "summary": "Retrieve Pending Payments",
+                "responses": {
+                    "200": {
+                        "description": "Successful response containing the list of pending payments and total amount.",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PendingPaymentsWithTotalResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "No pending payments found for the user.",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error occurred while fetching pending payments.",
                         "schema": {
                             "$ref": "#/definitions/errors.Error"
                         }
@@ -288,6 +323,38 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "Passw0rd@123"
+                }
+            }
+        },
+        "dto.PendingPayments": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "billId": {
+                    "type": "integer"
+                },
+                "groupId": {
+                    "type": "integer"
+                },
+                "groupName": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PendingPaymentsWithTotalResponse": {
+            "description": "Response model for listing pending payments with total amount.",
+            "type": "object",
+            "properties": {
+                "pendingPayments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PendingPayments"
+                    }
+                },
+                "totalAmount": {
+                    "type": "number"
                 }
             }
         },
