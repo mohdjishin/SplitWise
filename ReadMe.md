@@ -41,9 +41,9 @@ curl -I -X GET http://localhost:8080/ping
 curl -X POST http://localhost:8080/auth/register \
 -H "Content-Type: application/json" \
 -d '{
-    "email": "alice@example.com",
-    "password": "password123",
-    "name": "Alice"
+    "email": "foo@example.com",
+    "password": "passwOrd@123",
+    "name": "foo"
 }'
 ```
 
@@ -53,8 +53,8 @@ curl -X POST http://localhost:8080/auth/register \
 curl -X POST http://localhost:8080/auth/login \
 -H "Content-Type: application/json" \
 -d '{
-    "email": "alice@example.com",
-    "password": "password123"
+    "email": "foo@example.com",
+    "password": "passwOrd@123"
 }'
 ```
 
@@ -118,6 +118,14 @@ curl -X GET "http://localhost:8080/v1/groups/member-groups?status=PENDING" \
 
 ```
 
+### list pending payments for a user
+```bash
+curl -X GET http://localhost:8080/v1/groups/pending-payments \
+-   H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+
 ### download report based on owner from date to date by default will give last one week data - (today -7)
 ```bash
 curl -X POST http://localhost:8080/v1/groups/report \
@@ -129,3 +137,4 @@ curl -X POST http://localhost:8080/v1/groups/report \
 }' \
 --output report.pdf
 ```
+
