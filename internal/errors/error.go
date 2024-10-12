@@ -51,6 +51,8 @@ var (
 	ErrPaymentFailed        = &Error{Code: "PAYMENT_FAILED", Message: "Failed to update payment status"}
 	ErrBillCompletionFailed = &Error{Code: "BILL_COMPLETION_FAILED", Message: "Failed to mark the bill as completed"}
 	ErrGroupUpdateFailed    = &Error{Code: "GROUP_UPDATE_FAILED", Message: "Failed to update group information"}
+	ErrWhileFetchingMembers = &Error{Code: "WHILE_FETCHING_MEMBERS", Message: "Error while fetching group members"}
+	ErrWhileFetchingBill    = &Error{Code: "WHILE_FETCHING_BILL", Message: "Error while fetching bill"}
 )
 
 // Validation error functions
@@ -76,4 +78,8 @@ func ErrValidationFailed(s string) error {
 }
 func ErrInvalidQueryParameter(s string) error {
 	return &Error{Code: "INVALID_QUERY_PARAMETER", Message: s}
+}
+
+func ErrInternalErrorWithMessage(s string) error {
+	return &Error{Code: "INTERNAL_ERROR", Message: s}
 }

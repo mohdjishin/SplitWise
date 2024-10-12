@@ -90,10 +90,11 @@ func MarkPayment(w http.ResponseWriter, r *http.Request) {
 	if err := db.GetDb().Select("name").Where("id = ?", userID).First(&user).Error; err != nil {
 		if e.Is(err, gorm.ErrRecordNotFound) {
 			logger.LoggerInstance.Warn("User not found", zap.Float64("userID", userID))
-			http.Error(w, "User not found", http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(errors.ErrUserNotFound)
 		} else {
 			logger.LoggerInstance.Error("Error retrieving user", zap.Error(err))
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(errors.ErrInternalError)
 		}
 		return
 	}

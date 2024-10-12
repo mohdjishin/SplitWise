@@ -12,11 +12,13 @@ import (
 func NewRouter() (r *chi.Mux) {
 	r = chi.NewRouter()
 	r.Use(
+		mChi.Logger,
 		mChi.Recoverer,
 		mChi.Logger,
 		mChi.RequestID,
 		mChi.RealIP,
 		mChi.Heartbeat("/ping"),
+		mChi.Timeout(1),
 	)
 
 	r.Post("/auth/register", handlers.Register)

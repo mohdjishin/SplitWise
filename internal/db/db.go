@@ -49,11 +49,13 @@ func (m *DBManager) Connect() {
 	if err != nil {
 		logger.LoggerInstance.Fatal("failed to connect to database", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
 	}
-
+	logger.LoggerInstance.Info("Connected to database")
+	logger.LoggerInstance.Info("Migrating database")
 	err = m.db.AutoMigrate(&models.User{}, &models.Group{}, models.BillHistory{}, &models.Bill{}, &models.GroupMember{})
 	if err != nil {
 		logger.LoggerInstance.Fatal("failed to migrate database", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
 	}
+	logger.LoggerInstance.Info("Database migration successful")
 }
 
 func (m *DBManager) GetDB() *gorm.DB {

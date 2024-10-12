@@ -10,17 +10,14 @@
 - ~~[ ] Ensure user balance during payment (not needed)~~
 
 
-## Response Format
-- [ ] Make every response a JSON format, including error responses:
-  ```json
-  {
-    "code": "",
-    "message": ""
-  }
-  ```
+~~## Response Format~~
+- ~~[ ] Make every response a JSON format, including error responses:~~
+  ~~```json~~
+  ~~{"code": "","message": ""}~~
+ ~~ ```~~
 
 ## Struct Maintenance
-- [ ] Maintain separate request and response structs | to make sure data is not leaked (as of now, it is not a problem)
+- ~~[ ] Maintain separate request and response structs | to make sure data is not leaked (as of now, it is not a problem)
 
 ## Low Priority
 - [ ] Implement group status: Active / Inactive
