@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	e "errors"
 	"net/http"
-	"time"
 
 	jUtil "github.com/mohdjishin/SplitWise/helper/jwt"
 	"github.com/mohdjishin/SplitWise/helper/validate"
@@ -78,7 +77,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /auth/login [post]
 func Login(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(2 * time.Second)
 	var input dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		logger.LoggerInstance.Error("Error decoding request body", zap.Any("error", err))

@@ -33,6 +33,7 @@ var (
 	ErrUnauthorizationHeaderNotFound = &Error{Code: "UNAUTHORIZATION_HEADER_NOT_FOUND", Message: "Authorization header required"}
 	ErrInvalidToken                  = &Error{Code: "INVALID_TOKEN", Message: "Invalid token"}
 	ErrInvalidAuthHeader             = &Error{Code: "INVALID_AUTH_HEADER", Message: "Invalid Authorization header format. Expected"}
+	ErrNoPendingPayments             = &Error{Code: "NO_PENDING_PAYMENTS", Message: "No pending payments found"}
 )
 
 var (

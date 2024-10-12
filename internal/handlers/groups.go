@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	e "errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -13,6 +14,7 @@ import (
 	dto "github.com/mohdjishin/SplitWise/internal/models/dto"
 	"github.com/mohdjishin/SplitWise/logger"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
@@ -270,7 +272,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {array} dto.ListMemberGroupsResponse "Successful response with the list of groups."
 // @Failure 400 {object} errors.Error "Invalid status parameter provided."
 // @Failure 500 {object} errors.Error "Internal server error."
-// @Router /groups/member-groups [get]
+// @Router /v1/groups/member-groups [get]
 func ListMemberGroups(w http.ResponseWriter, r *http.Request) {
 	userId := middleware.GetCurrentUserId(r)
 	var groups []models.Group
@@ -331,4 +333,69 @@ func getGroupIDs(groups []models.Group) []uint {
 		groupIDs[i] = group.ID
 	}
 	return groupIDs
+}
+
+// GetPendingPayments retrieves all pending payments associated with the authenticated user.
+// @Summary Retrieve Pending Payments
+// @Description Fetches all pending payments for the current user that have not been paid yet, including group ID, group name, bill ID, and amount owed.
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.PendingPaymentsWithTotalResponse "Successful response containing the list of pending payments and total amount."
+// @Failure 404 {object} errors.Error "No pending payments found for the user."
+// @Failure 500 {object} errors.Error "Internal server error occurred while fetching pending payments."
+// @Router /v1/groups/pending-payments [get]
+func GetPendingPayments(w http.ResponseWriter, r *http.Request) {
+	userId := middleware.GetCurrentUserId(r)
+	var groupMembers []models.GroupMember
+
+	if err := db.GetDb().Where("user_id = ? AND has_paid = ?", userId, false).Find(&groupMembers).Error; err != nil {
+		if e.Is(err, gorm.ErrRecordNotFound) {
+			logger.LoggerInstance.Warn("No pending payments found", zap.Float64("userId", userId))
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(errors.ErrNoPendingPayments)
+		} else {
+			logger.LoggerInstance.Error("Failed to fetch pending payments", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+		}
+		return
+	}
+
+	var pendingPayments []dto.PendingPayments
+	totalAmount := 0.0
+
+	for _, member := range groupMembers {
+		var group models.Group
+		if err := db.GetDb().Where("id = ?", member.GroupID).First(&group).Error; err != nil {
+			logger.LoggerInstance.Error("Failed to fetch group", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+			return
+		}
+
+		var bill models.Bill
+		if err := db.GetDb().Where("id = ?", group.BillID).First(&bill).Error; err != nil {
+			logger.LoggerInstance.Error("Failed to fetch bill", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+			return
+		}
+
+		pendingPayments = append(pendingPayments, dto.PendingPayments{
+			GroupID:   group.ID,
+			GroupName: group.Name,
+			BillID:    bill.ID,
+			Amount:    bill.Amount,
+		})
+		totalAmount += bill.Amount
+	}
+
+	response := dto.PendingPaymentsWithTotalResponse{
+		PendingPayments: pendingPayments,
+		TotalAmount:     totalAmount,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(response)
 }

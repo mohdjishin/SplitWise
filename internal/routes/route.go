@@ -34,6 +34,7 @@ func NewRouter() (r *chi.Mux) {
 			r.Get("/owned", handlers.ListOwnedGroups)
 			r.Post("/{id}/addMembers", handlers.AddUsersToGroup)
 			r.Get("/member-groups", handlers.ListMemberGroups)
+			r.Get("/pending-payments", handlers.GetPendingPayments)
 
 			r.Post("/report", handlers.GetGroupReport)
 			// r.Get("/groups/{groupID}/report", GenerateSingleGroupReport) // Specific group report based on groupID

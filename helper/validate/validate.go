@@ -64,11 +64,10 @@ func passwordComplexity(fl validator.FieldLevel) bool {
 }
 
 func validateDateFormat(fl validator.FieldLevel) bool {
-	if fl.Field().IsZero() { // Check if the field is empty
-		return true // If empty, return true (valid)
+	if fl.Field().IsZero() {
+		return true
 	}
 	dateStr := fl.Field().String()
-	// Regular expression to match YYYY-MM-DD format
 	re := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 	return re.MatchString(dateStr)
 }
