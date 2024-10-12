@@ -1,19 +1,30 @@
+# TODO List
+<!-- Only remaining stuff will be available here -->
+## Priority
+
+### High Priority
+- [ ] Add route for specific group report
+
+### Medium Priority
+- [ ] Implement email verification using Google API
+- ~~[ ] Ensure user balance during payment (not needed)~~
 
 
-TODO: 
- -  priority
- - medium 
-     -  email verification. (use google api) 
-     <!-- -  user balance (while paying that user should have balance to pay.) as of now kept without balance concept :not needed -->  
+## Response Format
+- [ ] Make every response a JSON format, including error responses:
+  ```json
+  {
+    "code": "",
+    "message": ""
+  }
+  ```
 
+## Struct Maintenance
+- [ ] Maintain separate request and response structs | to make sure data is not leaked (as of now, it is not a problem)
 
-
- -  make every response as json. even error response. in proper format. {code :"",message:""} 
-
- -  request response struct should be maintained sepratly 
-
- - Low
-  -  group status Active Invactive. based on the date expiry date should be maintained  
-
-
-    
+## Low Priority
+- [ ] Implement group status: Active / Inactive
+  - Expiry date management required
+- [ ] Super Admin role management
+  - Manage entire system (e.g., delete a group)
+  - Update middleware and logic as needed

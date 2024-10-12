@@ -5,13 +5,12 @@ import (
 	mChi "github.com/go-chi/chi/middleware"
 	"github.com/mohdjishin/SplitWise/internal/handlers"
 	"github.com/mohdjishin/SplitWise/internal/middleware"
-	"github.com/mohdjishin/SplitWise/logger"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// TODO: add route for specific group report
 func NewRouter() (r *chi.Mux) {
 	r = chi.NewRouter()
-	defer logger.LoggerInstance.Sync()
 	r.Use(
 		mChi.Recoverer,
 		mChi.Logger,
