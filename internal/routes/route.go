@@ -43,7 +43,7 @@ func NewRouter() (r *chi.Mux) {
 
 		r.Route("/report", func(r chi.Router) {
 			r.Post("/", handlers.GetGroupReport)
-			r.Get("/", handlers.GenerateSingleGroupReport)
+			r.Get("/{id}", handlers.GenerateSingleGroupReport)
 		})
 	})
 	return

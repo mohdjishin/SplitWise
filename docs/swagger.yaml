@@ -531,7 +531,32 @@ paths:
       summary: List groups owned by the user
       tags:
       - groups
-  /v1/groups/report:
+  /v1/payments/pending-payments:
+    get:
+      consumes:
+      - application/json
+      description: Fetches all pending payments for the current user that have not
+        been paid yet, including group ID, group name, bill ID, and amount owed.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response containing the list of pending payments
+            and total amount.
+          schema:
+            $ref: '#/definitions/dto.PendingPaymentsWithTotalResponse'
+        "404":
+          description: No pending payments found for the user.
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal server error occurred while fetching pending payments.
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Retrieve Pending Payments
+      tags:
+      - payments
+  /v1/report:
     post:
       consumes:
       - application/json
@@ -579,29 +604,43 @@ paths:
       summary: Download PDF report of user's groups
       tags:
       - reports
-  /v1/payments/pending-payments:
+  /v1/report/{id}:
     get:
       consumes:
       - application/json
-      description: Fetches all pending payments for the current user that have not
-        been paid yet, including group ID, group name, bill ID, and amount owed.
+      description: Generates a detailed PDF report for the group specified by its
+        ID. The report includes group details, associated bills, and member history.
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
-      - application/json
+      - application/pdf
       responses:
         "200":
-          description: Successful response containing the list of pending payments
-            and total amount.
+          description: PDF report generated successfully
           schema:
-            $ref: '#/definitions/dto.PendingPaymentsWithTotalResponse'
+            type: file
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/errors.Error'
         "404":
-          description: No pending payments found for the user.
+          description: Group not found
           schema:
             $ref: '#/definitions/errors.Error'
         "500":
-          description: Internal server error occurred while fetching pending payments.
+          description: Internal server error
           schema:
             $ref: '#/definitions/errors.Error'
-      summary: Retrieve Pending Payments
+      summary: Generate a PDF report for a specific group
       tags:
-      - payments
+      - reports
 swagger: "2.0"

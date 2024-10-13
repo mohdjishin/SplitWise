@@ -36,7 +36,7 @@ import (
 // @Failure 400 {object} errors.Error "Bad Request"
 // @Failure 404 {object} errors.Error "Not Found"
 // @Failure 500 {object} errors.Error "Internal Server Error"
-// @Router /v1/groups/report [post]
+// @Router /v1/report [post]
 func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 	log.Info("GetGroupReport handler called")
 
@@ -178,6 +178,19 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 	log.Info("PDF generated successfully")
 }
 
+// GenerateSingleGroupReport generates a PDF report for a specific group.
+// @Summary Generate a PDF report for a specific group
+// @Description Generates a detailed PDF report for the group specified by its ID. The report includes group details, associated bills, and member history.
+// @Tags reports
+// @Accept  json
+// @Produce  application/pdf
+// @Param Authorization header string true "Bearer token"
+// @Param id path int true "Group ID"
+// @Success 200 {file} report.pdf "PDF report generated successfully"
+// @Failure 400 {object} errors.Error "Bad request"
+// @Failure 404 {object} errors.Error "Group not found"
+// @Failure 500 {object} errors.Error "Internal server error"
+// @Router /v1/report/{id} [get]
 func GenerateSingleGroupReport(w http.ResponseWriter, r *http.Request) {
 	log.Debug("GenerateSingleGroupReport handler called")
 
