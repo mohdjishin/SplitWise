@@ -1,5 +1,7 @@
 # SplitWise
 
+**_Important:_** **Don't worry about database scripts; GORM will handle the migrations. Start by registering a user.**
+
 ## Installation and Setup
 
 ### Prerequisites
@@ -23,7 +25,8 @@
 1. Clone the repository
 2. Set up PostgreSQL and create a database
 3. Update the database configuration in `config.json`
-4. Run `go run cmd/main.go` in the root directory of the project
+4. incase need to regenerate the swagger file run `swag init` in the root directory of the project
+5. Run `go run cmd/main.go` in the root directory of the project
 
 ## Usage Examples
 

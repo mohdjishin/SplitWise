@@ -33,9 +33,9 @@ func NewRouter() (r *chi.Mux) {
 			r.Get("/owned", handlers.ListOwnedGroups)
 			r.Post("/{id}/addMembers", handlers.AddUsersToGroup)
 			r.Get("/member-groups", handlers.ListMemberGroups)
-
-			r.Post("/report", handlers.GetGroupReport)
-			// r.Get("/groups/{groupID}/report", GenerateSingleGroupReport) // Specific group report based on groupID
+			// might move this to a separate route
+			r.Post("/report", handlers.GetGroupReport) //Thought of query params but it's better to have a request body
+			// r.Get("/groups/{groupID}/report", GenerateSingleGroupReport) // Specific group report based on groupID :TODO add this route
 
 		})
 

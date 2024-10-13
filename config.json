@@ -1,6 +1,6 @@
 {
     "port": "8080",
     "jwtString": "SplitWiseTestJwtSignString",
-    "dsn": "host=localhost user=myuser password=mypassword dbname=mydb port=5432 sslmode=disable",
+    "dsn": "host=db user=myuser password=mypassword dbname=mydb port=5432 sslmode=disable",
     "env":""
 }
