@@ -84,3 +84,7 @@ func ErrInvalidQueryParameter(s string) error {
 func ErrInternalErrorWithMessage(s string) error {
 	return &Error{Code: "INTERNAL_ERROR", Message: s}
 }
+
+func ErrUsersAlreadyExists(email []string) error {
+	return &Error{Code: "USERS_ALREADY_EXISTS", Message: fmt.Sprintf("Users already exists with email : %v", strings.Join(email, ", "))}
+}
