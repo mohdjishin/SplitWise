@@ -18,7 +18,6 @@ func NewRouter() (r *chi.Mux) {
 		mChi.RequestID,
 		mChi.RealIP,
 		mChi.Heartbeat("/ping"),
-		// mChi.Timeout(1),
 	)
 
 	r.Post("/auth/register", handlers.Register)
@@ -34,7 +33,6 @@ func NewRouter() (r *chi.Mux) {
 			r.Get("/owned", handlers.ListOwnedGroups)
 			r.Post("/{id}/addMembers", handlers.AddUsersToGroup)
 			r.Get("/member-groups", handlers.ListMemberGroups)
-			r.Get("/pending-payments", handlers.GetPendingPayments)
 
 			r.Post("/report", handlers.GetGroupReport)
 			// r.Get("/groups/{groupID}/report", GenerateSingleGroupReport) // Specific group report based on groupID
@@ -43,6 +41,8 @@ func NewRouter() (r *chi.Mux) {
 
 		r.Route("/payments", func(r chi.Router) {
 			r.Post("/", handlers.MarkPayment)
+			r.Get("/pending", handlers.GetPendingPayments)
+
 		})
 	})
 	return

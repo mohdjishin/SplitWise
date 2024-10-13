@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	e "errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -14,9 +13,20 @@ import (
 	dto "github.com/mohdjishin/SplitWise/internal/models/dto"
 	log "github.com/mohdjishin/SplitWise/logger"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
+// CreateGroupWithBill handles creating a group with an associated bill
+// @Summary Create a new group with an associated bill
+// @Description Creates a group with the specified name and an associated bill, then adds the user as a member of the group.
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param request body dto.CreateGroupWithBillRequest true "CreateGroupWithBillRequest details"
+// @Success 201 {object} dto.CreateGroupWithBillResponse
+// @Failure 400 {object} errors.Error "Bad Request"
+// @Failure 500 {object} errors.Error "Internal Server Error"
+// @Router /v1/groups/ [post]
 func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 
 	var input dto.CreateGroupWithBillRequest
@@ -80,13 +90,24 @@ func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"groupId": group.ID,
-		"billId":  bill.ID,
-		"message": "Group and bill created successfully",
+
+	_ = json.NewEncoder(w).Encode(dto.CreateGroupWithBillResponse{
+		GroupID: group.ID,
+		BillID:  bill.ID,
+		Message: "Group and bill created successfully",
 	})
 }
 
+// DeleteGroup handles deleting a specified group
+// @Summary Delete a group by ID (NOT NEEDED AS OF NOW)
+// @Description Deletes a group identified by the specified group ID if the user is the creator of the group. (owner only can do this operation)
+// @Tags groups
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "ID of the group to be deleted"
+// @Success 200 {object} dto.DeleteGroupResponse
+// @Failure 404 {object} errors.Error "Group Not Found"
+// @Failure 500 {object} errors.Error "Internal Server Error"
+// @Router /v1/groups/{id} [delete]
 func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	var group models.Group
@@ -113,9 +134,17 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Group deleted"})
+	_ = json.NewEncoder(w).Encode(dto.DeleteGroupResponse{Message: "Group deleted"})
 }
 
+// ListOwnedGroups handles fetching groups owned by the current user
+// @Summary List groups owned by the user
+// @Description Fetches and returns a list of groups that are owned by the current user, including group members.
+// @Tags groups
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {array} dto.ListOwnedGroupsResponse "List of groups owned by the user"
+// @Failure 500 {object} errors.Error "Internal Server Error"
+// @Router /v1/groups/owned [get]
 func ListOwnedGroups(w http.ResponseWriter, r *http.Request) {
 	userId := middleware.GetCurrentUserId(r)
 	var groups []models.Group
@@ -133,19 +162,12 @@ func ListOwnedGroups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var groupList []struct {
-		Group   models.Group         `json:"group"`
-		Members []models.GroupMember `json:"members"`
-	}
-
+	var groupList []dto.ListOwnedGroupsResponse
 	for _, group := range groups {
 		var members []models.GroupMember
 		err := db.GetDb().Where("group_id = ?", group.ID).Find(&members).Error
 		if err == nil {
-			groupList = append(groupList, struct {
-				Group   models.Group         `json:"group"`
-				Members []models.GroupMember `json:"members"`
-			}{
+			groupList = append(groupList, dto.ListOwnedGroupsResponse{
 				Group:   group,
 				Members: members,
 			})
@@ -156,6 +178,18 @@ func ListOwnedGroups(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(groupList)
 }
 
+// AddUsersToGroup handles adding users to a specified group
+// @Summary Add members to a group
+// @Description Adds members identified by their email addresses to a group if the user is the creator of the group.
+// @Tags groups
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "ID of the group to which members will be added"
+// @Param request body dto.AddUsersToGroupRequest true "List of user email IDs to add to the group"
+// @Success 200 {object} dto.AddUsersToGroupResponse "success message"
+// @Failure 400 {object} errors.Error "Bad Request"
+// @Failure 404 {object} errors.Error "Group Not Found or Users Not Found"
+// @Failure 500 {object} errors.Error "Internal Server Error"
+// @Router /v1/groups/{id}/users [post]
 func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	log.Debug("AddUsersToGroup request", zap.Any("groupID", groupID))
@@ -186,6 +220,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 
 	userList := map[string]uint{}
 	missingUsers := []string{}
+	existingUsers := []string{}
 	for _, email := range input.UserEmailIds {
 		var user models.User
 		if err := db.GetDb().Where("email = ?", email).First(&user).Error; err != nil {
@@ -193,11 +228,20 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		userList[email] = user.ID
+		var groupMember models.GroupMember
+		if err := db.GetDb().Where("group_id = ? AND user_id = ?", groupID, user.ID).First(&groupMember).Error; err == nil {
+			existingUsers = append(existingUsers, email)
+		}
 	}
 
 	if len(missingUsers) > 0 {
 		w.WriteHeader(http.StatusNotFound)
 		_ = json.NewEncoder(w).Encode(errors.ErrUsersNotFound(missingUsers))
+		return
+	}
+	if len(existingUsers) > 0 {
+		w.WriteHeader(http.StatusConflict) // HTTP 409 Conflict
+		_ = json.NewEncoder(w).Encode(errors.ErrUsersAlreadyExists(existingUsers))
 		return
 	}
 
@@ -263,7 +307,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Users added to group successfully"})
+	_ = json.NewEncoder(w).Encode(dto.AddUsersToGroupResponse{Message: "Users added to group successfully"})
 }
 
 // ListMemberGroups
@@ -340,71 +384,4 @@ func getGroupIDs(groups []models.Group) []uint {
 		groupIDs[i] = group.ID
 	}
 	return groupIDs
-}
-
-// GetPendingPayments retrieves all pending payments associated with the authenticated user.
-// @Summary Retrieve Pending Payments
-// @Description Fetches all pending payments for the current user that have not been paid yet, including group ID, group name, bill ID, and amount owed.
-// @Tags groups
-// @Accept json
-// @Produce json
-// @Success 200 {object} dto.PendingPaymentsWithTotalResponse "Successful response containing the list of pending payments and total amount."
-// @Failure 404 {object} errors.Error "No pending payments found for the user."
-// @Failure 500 {object} errors.Error "Internal server error occurred while fetching pending payments."
-// @Router /v1/groups/pending-payments [get]
-func GetPendingPayments(w http.ResponseWriter, r *http.Request) {
-	userId := middleware.GetCurrentUserId(r)
-	var groupMembers []models.GroupMember
-	log.Debug("GetPendingPayments request", zap.Any("userId", userId))
-	if err := db.GetDb().Where("user_id = ? AND has_paid = ?", userId, false).Find(&groupMembers).Error; err != nil {
-		if e.Is(err, gorm.ErrRecordNotFound) {
-			log.Warn("No pending payments found", zap.Float64("userId", userId))
-			w.WriteHeader(http.StatusNotFound)
-			_ = json.NewEncoder(w).Encode(errors.ErrNoPendingPayments)
-		} else {
-			log.Error("Failed to fetch pending payments", zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
-		}
-		return
-	}
-
-	log.Debug("GetPendingPayments request", zap.Any("groupMembers", groupMembers))
-	var pendingPayments []dto.PendingPayments
-	totalAmount := 0.0
-
-	for _, member := range groupMembers {
-		var group models.Group
-		if err := db.GetDb().Where("id = ?", member.GroupID).First(&group).Error; err != nil {
-			log.Error("Failed to fetch group", zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
-			return
-		}
-
-		var bill models.Bill
-		if err := db.GetDb().Where("id = ?", group.BillID).First(&bill).Error; err != nil {
-			log.Error("Failed to fetch bill", zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
-			return
-		}
-
-		pendingPayments = append(pendingPayments, dto.PendingPayments{
-			GroupID:   group.ID,
-			GroupName: group.Name,
-			BillID:    bill.ID,
-			Amount:    bill.Amount,
-		})
-		totalAmount += bill.Amount
-	}
-
-	response := dto.PendingPaymentsWithTotalResponse{
-		PendingPayments: pendingPayments,
-		TotalAmount:     totalAmount,
-	}
-	log.Debug("GetPendingPayments request", zap.Any("response", response))
-
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(response)
 }
