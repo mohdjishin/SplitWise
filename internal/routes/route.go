@@ -8,7 +8,6 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// TODO: add route for specific group report
 func NewRouter() (r *chi.Mux) {
 	r = chi.NewRouter()
 	r.Use(
