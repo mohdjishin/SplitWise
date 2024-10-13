@@ -123,32 +123,31 @@ func GenerateGroupDetailedReportPDF(report dto.GroupReportRequest) *gofpdf.Fpdf 
 	pdf.Ln(6)
 	pdf.Cell(0, 10, fmt.Sprintf("Status: %s", report.Group.Status))
 	pdf.Ln(12)
-	if len(report.History) > 0 {
-		pdf.SetFillColor(200, 200, 255)
-		pdf.SetFont("Arial", "B", 12)
-		pdf.CellFormat(0, 10, "Payment History", "", 1, "L", true, 0, "")
-		pdf.Ln(2)
 
-		pdf.SetFont("Arial", "", 10)
-		for _, history := range report.History {
-			pdf.Cell(0, 10, fmt.Sprintf("Paid By: %s, Amount: $%.2f, Paid At: %s",
-				history.PaidBy, history.Amount, history.PaidAt.Format("2006-01-02 15:04:05")))
-			pdf.Ln(6)
-		}
+	pdf.SetFillColor(200, 200, 255)
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(0, 10, "Payment History", "", 1, "L", true, 0, "")
+	pdf.Ln(2)
+
+	pdf.SetFont("Arial", "", 10)
+	for _, history := range report.History {
+		pdf.Cell(0, 10, fmt.Sprintf("Paid By: %s, Amount: $%.2f, Paid At: %s",
+			history.PaidBy, history.Amount, history.PaidAt.Format("2006-01-02 15:04:05")))
 		pdf.Ln(6)
 	}
+	pdf.Ln(6)
 	if len(report.Members) > 0 {
 		pdf.SetFillColor(200, 200, 255)
 		pdf.SetFont("Arial", "B", 12)
 		pdf.CellFormat(0, 10, "Members", "", 1, "L", true, 0, "")
 		pdf.Ln(2)
+	}
 
-		pdf.SetFont("Arial", "", 10)
-		for _, member := range report.Members {
-			pdf.Cell(0, 10, fmt.Sprintf("Member Name: %s, Split Amount: $%.2f, Has Paid: %t",
-				report.UserInfo[member.UserID], member.SplitAmount, member.HasPaid))
-			pdf.Ln(6)
-		}
+	pdf.SetFont("Arial", "", 10)
+	for _, member := range report.Members {
+		pdf.Cell(0, 10, fmt.Sprintf("Member Name: %s, Split Amount: $%.2f, Has Paid: %t",
+			report.UserInfo[member.UserID], member.SplitAmount, member.HasPaid))
+		pdf.Ln(6)
 	}
 
 	return pdf
