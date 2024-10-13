@@ -122,6 +122,126 @@
                 }
             }
         },
+        "/payments": {
+            "post": {
+                "description": "Marks a payment for a specific group and updates the group's payment status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Marks a payment for a group.",
+                "parameters": [
+                    {
+                        "description": "Mark Payment Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MarkPaymentRequest"
+                        }
+                    },
+                    {
+                        "description": "groupId of the group for which the payment is marked",
+                        "name": "groupId",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MarkPaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Group not found or User not found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "409": {
+                        "description": "Payment already made",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/groups/": {
+            "post": {
+                "description": "Creates a group with the specified name and an associated bill, then adds the user as a member of the group.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "groups"
+                ],
+                "summary": "Create a new group with an associated bill",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "CreateGroupWithBillRequest details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateGroupWithBillRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateGroupWithBillResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/groups/member-groups": {
             "get": {
                 "description": "Retrieves all groups associated with the authenticated user. Optionally filters the results by group status. If no status is provided, all groups will be returned.",
@@ -168,34 +288,34 @@
                 }
             }
         },
-        "/v1/groups/pending-payments": {
+        "/v1/groups/owned": {
             "get": {
-                "description": "Fetches all pending payments for the current user that have not been paid yet, including group ID, group name, bill ID, and amount owed.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
+                "description": "Fetches and returns a list of groups that are owned by the current user, including group members.",
                 "tags": [
                     "groups"
                 ],
-                "summary": "Retrieve Pending Payments",
+                "summary": "List groups owned by the user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Successful response containing the list of pending payments and total amount.",
+                        "description": "List of groups owned by the user",
                         "schema": {
-                            "$ref": "#/definitions/dto.PendingPaymentsWithTotalResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "No pending payments found for the user.",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.ListOwnedGroupsResponse"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal server error occurred while fetching pending payments.",
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/errors.Error"
                         }
@@ -273,9 +393,224 @@
                     }
                 }
             }
+        },
+        "/v1/groups/{id}": {
+            "delete": {
+                "description": "Deletes a group identified by the specified group ID if the user is the creator of the group. (owner only can do this operation)",
+                "tags": [
+                    "groups"
+                ],
+                "summary": "Delete a group by ID (NOT NEEDED AS OF NOW)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the group to be deleted",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeleteGroupResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Group Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/groups/{id}/users": {
+            "post": {
+                "description": "Adds members identified by their email addresses to a group if the user is the creator of the group.",
+                "tags": [
+                    "groups"
+                ],
+                "summary": "Add members to a group",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the group to which members will be added",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "List of user email IDs to add to the group",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AddUsersToGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success message",
+                        "schema": {
+                            "$ref": "#/definitions/dto.AddUsersToGroupResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Group Not Found or Users Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/payments/pending-payments": {
+            "get": {
+                "description": "Fetches all pending payments for the current user that have not been paid yet, including group ID, group name, bill ID, and amount owed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "Retrieve Pending Payments",
+                "responses": {
+                    "200": {
+                        "description": "Successful response containing the list of pending payments and total amount.",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PendingPaymentsWithTotalResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "No pending payments found for the user.",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error occurred while fetching pending payments.",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.AddUsersToGroupRequest": {
+            "type": "object",
+            "required": [
+                "userEmailIds"
+            ],
+            "properties": {
+                "userEmailIds": {
+                    "description": "UserIds      []uint   `json:\"userIds\"`",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.AddUsersToGroupResponse": {
+            "description": "Response model for adding users to a group.",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateGroupWithBillRequest": {
+            "type": "object",
+            "required": [
+                "bill",
+                "groupName"
+            ],
+            "properties": {
+                "bill": {
+                    "type": "object",
+                    "required": [
+                        "amount",
+                        "name"
+                    ],
+                    "properties": {
+                        "amount": {
+                            "type": "number"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "groupName": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateGroupWithBillResponse": {
+            "description": "Response model for the creation of a group with an associated bill.",
+            "type": "object",
+            "properties": {
+                "billId": {
+                    "type": "integer"
+                },
+                "groupId": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DeleteGroupResponse": {
+            "description": "Response model for deleting a group.",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.GetGroupReportRequest": {
             "description": "Request model for generating a group report based on date range.",
             "type": "object",
@@ -290,6 +625,21 @@
         },
         "dto.ListMemberGroupsResponse": {
             "description": "Response model for listing groups the user belongs to, including group details and member information.",
+            "type": "object",
+            "properties": {
+                "group": {
+                    "$ref": "#/definitions/models.Group"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.GroupMember"
+                    }
+                }
+            }
+        },
+        "dto.ListOwnedGroupsResponse": {
+            "description": "ListOwnedGroupsResponse is the response model for listing owned groups.",
             "type": "object",
             "properties": {
                 "group": {
@@ -320,6 +670,31 @@
                 }
             }
         },
+        "dto.MarkPaymentRequest": {
+            "description": "Mark a payment for a specific group",
+            "type": "object",
+            "required": [
+                "groupId"
+            ],
+            "properties": {
+                "groupId": {
+                    "type": "integer"
+                },
+                "remarks": {
+                    "description": "Optional* remarks for the payment",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MarkPaymentResponse": {
+            "description": "Response for marking a payment",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.PendingPayments": {
             "type": "object",
             "properties": {
@@ -341,6 +716,9 @@
             "description": "Response model for listing pending payments with total amount.",
             "type": "object",
             "properties": {
+                "message": {
+                    "type": "string"
+                },
                 "pendingPayments": {
                     "type": "array",
                     "items": {

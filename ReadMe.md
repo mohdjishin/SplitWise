@@ -120,7 +120,7 @@ curl -X GET "http://localhost:8080/v1/groups/member-groups?status=PENDING" \
 
 ### list pending payments for a user
 ```bash
-curl -X GET http://localhost:8080/v1/groups/pending-payments \
+curl -X GET http://localhost:8080/v1/payments/pending \
 -   H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json"
 ```
