@@ -131,13 +131,22 @@ curl -X GET http://localhost:8080/v1/payments/pending \
 
 ### download report based on owner from date to date by default will give last one week data - (today -7)
 ```bash
-curl -X POST http://localhost:8080/v1/groups/report \
+curl -X POST http://localhost:8080/v1/report \
 -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
 -H "Content-Type: application/json" \
 -d '{
-    "from":"",
-    "to":""
+    "from":"2023-01-01",
+    "to":"2024-08-013"
 }' \
 --output report.pdf
 ```
+
+
+Download Report Based on Group ID
+```bash
+curl -X GET "http://localhost:8080/v1/report/1" \
+-H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+--output report.pdf
+```
+
 
