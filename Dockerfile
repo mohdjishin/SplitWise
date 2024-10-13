@@ -10,16 +10,16 @@ COPY . .
 
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
-RUN go build -o main ./cmd/main.go
+RUN go build -o splitWise ./cmd/*.go
 
 FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=builder /app/main .
+COPY --from=builder /app/splitWise .
 
 COPY --from=builder /app/config.json .
 
-EXPOSE 8081
+EXPOSE 8080
 
-CMD ["./main"]
+CMD ["./splitWise"]
