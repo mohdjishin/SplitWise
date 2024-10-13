@@ -9,6 +9,7 @@ import (
 
 	e "errors"
 
+	"github.com/go-chi/chi"
 	"github.com/mohdjishin/SplitWise/helper/pdf"
 	"github.com/mohdjishin/SplitWise/internal/db"
 	"github.com/mohdjishin/SplitWise/internal/errors"
@@ -152,7 +153,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pdfResponse := pdf.GeneratePDFReport(grpInfo, fromDate, toDate, user.Name)
+	pdfResponse := pdf.GenerateOwnerGroupsReportPDF(grpInfo, fromDate, toDate, user.Name)
 
 	var buf bytes.Buffer
 	if err := pdfResponse.Output(&buf); err != nil {
@@ -174,4 +175,107 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 
 	}
+	log.Info("PDF generated successfully")
+}
+
+func GenerateSingleGroupReport(w http.ResponseWriter, r *http.Request) {
+	log.Debug("GenerateSingleGroupReport handler called")
+
+	grpId := chi.URLParam(r, "id")
+	userId := middleware.GetCurrentUserId(r)
+
+	var group models.Group
+	err := db.GetDb().Where("id = ? AND created_by = ?", grpId, userId).First(&group).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			log.Warn("Group not found for user:", zap.Any("group_id", grpId), zap.Any("user_id", userId))
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
+			return
+		}
+		log.Error("Database error while fetching group:", zap.Any("error", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+		return
+	}
+
+	var bill models.Bill
+	err = db.GetDb().Where("group_id = ?", group.ID).First(&bill).Error
+	if err != nil {
+		log.Error("Database error while fetching bill:", zap.Any("error", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+		return
+	}
+
+	var grpMembers []models.GroupMember
+	err = db.GetDb().Where("group_id = ?", group.ID).Find(&grpMembers).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Error("Database error while fetching group members:", zap.Any("error", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+		return
+	}
+	if len(grpMembers) == 0 {
+		log.Warn("No group members found for group:", zap.Any("group_id", group.ID))
+	}
+
+	var billHistory []models.BillHistory
+	err = db.GetDb().Where("bill_id = ?", bill.ID).Find(&billHistory).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Error("Database error while fetching bill history:", zap.Any("error", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+		return
+	}
+	userMap := make(map[uint]string, len(grpMembers))
+	if len(billHistory) == 0 {
+		log.Warn("No bill history found for bill:", zap.Any("bill_id", bill.ID))
+	} else {
+		var memberIDs []int
+		for _, member := range grpMembers {
+			memberIDs = append(memberIDs, int(member.UserID))
+		}
+		var users []models.User
+		err = db.GetDb().Select("id,name").Where("id IN ?", memberIDs).Find(&users).Error
+		if err != nil {
+			log.Error("Database error while fetching user details:", zap.Any("error", err))
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+			return
+		}
+
+		for _, user := range users {
+			userMap[user.ID] = user.Name
+		}
+
+	}
+
+	log.Debug("[+]--->Group and associated data fetched successfully", zap.Any("group", group), zap.Any("bill", bill), zap.Any("members", grpMembers), zap.Any("history", billHistory))
+	req := dto.GroupReportRequest{Group: group,
+		Bill:     bill,
+		Members:  grpMembers,
+		History:  billHistory,
+		UserInfo: userMap}
+	pdfResponse := pdf.GenerateGroupDetailedReportPDF(req)
+
+	var buf bytes.Buffer
+	if err := pdfResponse.Output(&buf); err != nil {
+		log.Error("Failed to generate PDF", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+		return
+	}
+
+	fileName := fmt.Sprintf("%s_%s_report.pdf", userMap[uint(userId)], group.Name)
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	w.WriteHeader(http.StatusOK)
+
+	if _, err := w.Write(buf.Bytes()); err != nil {
+		log.Error("Failed to write PDF to response", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
+	}
+	log.Info("PDF generated successfully")
 }
