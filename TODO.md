@@ -17,10 +17,10 @@
  ~~ ```~~
 
 ## Struct Maintenance
-- ~~[ ] Maintain separate request and response structs | to make sure data is not leaked (as of now, it is not a problem)
+- ~~[ ] Maintain separate request and response structs | to make sure data is not leaked (as of now, it is not a problem)~~
 
 ## Low Priority
-  -  [ ]  Add swagger for all routes. (if possible time constraint is there)
+  ~~-  [ ]  Add swagger for all routes. (if possible time constraint is there)~~
   - [ ] Implement group status: Active / Inactive
   - Expiry date management required
   - [ ] Super Admin role management
