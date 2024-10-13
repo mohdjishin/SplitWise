@@ -18,7 +18,7 @@ func NewRouter() (r *chi.Mux) {
 		mChi.RequestID,
 		mChi.RealIP,
 		mChi.Heartbeat("/ping"),
-		mChi.Timeout(1),
+		// mChi.Timeout(1),
 	)
 
 	r.Post("/auth/register", handlers.Register)

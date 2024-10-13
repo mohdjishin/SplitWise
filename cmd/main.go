@@ -30,6 +30,13 @@ func run() error {
 	log.Info("Starting server on port " + port)
 
 	serverAddr := ":" + port
+	// TODO: if needed timeout
+	// srv := &http.Server{
+	// 	Addr:         serverAddr,
+	// 	ReadTimeout:  5 * time.Second,
+	// 	WriteTimeout: 10 * time.Second,
+	// }
+	//  srv.ListenAndServe()
 	if err := http.ListenAndServe(serverAddr, routes.NewRouter()); err != nil {
 		return err
 	}

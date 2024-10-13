@@ -2,6 +2,7 @@ package pdf
 
 import (
 	"fmt"
+
 	"time"
 
 	"github.com/jung-kurt/gofpdf"
@@ -9,6 +10,7 @@ import (
 )
 
 func GeneratePDFReport(groupsInfo []dto.Group, startDate, endDate time.Time, ownerName string) *gofpdf.Fpdf {
+
 	pdf := gofpdf.New("P", "mm", "Tabloid", "")
 	pdf.AddPage()
 
@@ -32,7 +34,7 @@ func GeneratePDFReport(groupsInfo []dto.Group, startDate, endDate time.Time, own
 	pdf.SetFont("Arial", "", 7)
 
 	for _, group := range groupsInfo {
-		lastBillDate := "N/A"
+		lastBillDate := "N/A" //TODO: To be implemented later least priority
 		if !group.Bills.Date.IsZero() {
 			lastBillDate = group.Bills.Date.Format("2006-01-02")
 		}
@@ -46,7 +48,7 @@ func GeneratePDFReport(groupsInfo []dto.Group, startDate, endDate time.Time, own
 			fmt.Sprintf("%d", group.Members),
 			group.Status,
 			lastBillDate,
-			"N/A", //TODO: have to add later
+			"N/A", //TODO: To be implemented later least priority
 		}
 
 		maxLines := 1

@@ -12,8 +12,8 @@ type Config struct {
 	Port      string `mapstructure:"port"`
 	JwtString string `mapstructure:"jwtString"`
 	DSN       string `mapstructure:"dsn"`
-	LogLevel  string `mapstructure:"logLevel"` // not used as of now kept in .env to change it dynamically from docker env
-	ENV       string `mapstructure:"env"`
+	// LogLevel  string `mapstructure:"logLevel"` // not used as of now kept in .env to change it dynamically from docker env
+	ENV string `mapstructure:"env"`
 }
 
 var config Config

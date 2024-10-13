@@ -26,6 +26,7 @@ func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(errors.ErrBadRequest)
 		return
 	}
+	log.Debug("CreateGroupWithBill request", zap.Any("request", input))
 	if err := validate.ValidateStruct(input); err != nil {
 		log.Error("Error validating request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)
@@ -89,7 +90,7 @@ func CreateGroupWithBill(w http.ResponseWriter, r *http.Request) {
 func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	var group models.Group
-
+	log.Debug("DeleteGroup request", zap.Any("groupID", groupID))
 	if err := db.GetDb().Where("id = ?", groupID).First(&group).Error; err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		log.Error("Group not found", zap.Error(err))
@@ -103,7 +104,7 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(errors.ErrGroupNotFound)
 		return
 	}
-
+	log.Debug("DeleteGroup request", zap.Any("groupID and userId", []any{groupID, userId}))
 	if err := db.GetDb().Delete(&group).Error; err != nil {
 		log.Error("Failed to delete group", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -118,7 +119,7 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 func ListOwnedGroups(w http.ResponseWriter, r *http.Request) {
 	userId := middleware.GetCurrentUserId(r)
 	var groups []models.Group
-
+	log.Debug("ListOwnedGroups request", zap.Any("userId", userId))
 	err := db.GetDb().Table("groups").
 		Select("groups.*, group_members.user_id").
 		Joins("LEFT JOIN group_members ON group_members.group_id = groups.id").
@@ -157,7 +158,7 @@ func ListOwnedGroups(w http.ResponseWriter, r *http.Request) {
 
 func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
-
+	log.Debug("AddUsersToGroup request", zap.Any("groupID", groupID))
 	var input dto.AddUsersToGroupRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Error("Invalid request payload", zap.Error(err))
@@ -165,6 +166,8 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(errors.ErrBadRequest)
 		return
 	}
+	log.Debug("AddUsersToGroup request", zap.Any("request", input))
+
 	if err := validate.ValidateStruct(input); err != nil {
 		log.Error("Error validating request body", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
@@ -172,6 +175,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userId := middleware.GetCurrentUserId(r)
+	log.Debug("AddUsersToGroup request", zap.Any("userId", userId))
 	var group models.Group
 	if err := db.GetDb().Where("id = ? AND created_by = ?", groupID, userId).First(&group).Error; err != nil {
 		log.Error("Group not found", zap.Error(err))
@@ -276,6 +280,7 @@ func AddUsersToGroup(w http.ResponseWriter, r *http.Request) {
 func ListMemberGroups(w http.ResponseWriter, r *http.Request) {
 	userId := middleware.GetCurrentUserId(r)
 	var groups []models.Group
+	log.Debug("ListMemberGroups request", zap.Any("userId", userId))
 
 	status := r.URL.Query().Get("status")
 
@@ -299,6 +304,8 @@ func ListMemberGroups(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(errors.ErrInternalError)
 		return
 	}
+	log.Debug("ListMemberGroups request", zap.Any("groups", groups))
+	log.Debug("len(groups)", zap.Any("len(groups)", len(groups)))
 
 	var groupList []dto.ListMemberGroupsResponse
 	if len(groups) > 0 {
@@ -348,7 +355,7 @@ func getGroupIDs(groups []models.Group) []uint {
 func GetPendingPayments(w http.ResponseWriter, r *http.Request) {
 	userId := middleware.GetCurrentUserId(r)
 	var groupMembers []models.GroupMember
-
+	log.Debug("GetPendingPayments request", zap.Any("userId", userId))
 	if err := db.GetDb().Where("user_id = ? AND has_paid = ?", userId, false).Find(&groupMembers).Error; err != nil {
 		if e.Is(err, gorm.ErrRecordNotFound) {
 			log.Warn("No pending payments found", zap.Float64("userId", userId))
@@ -362,6 +369,7 @@ func GetPendingPayments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Debug("GetPendingPayments request", zap.Any("groupMembers", groupMembers))
 	var pendingPayments []dto.PendingPayments
 	totalAmount := 0.0
 
@@ -395,6 +403,7 @@ func GetPendingPayments(w http.ResponseWriter, r *http.Request) {
 		PendingPayments: pendingPayments,
 		TotalAmount:     totalAmount,
 	}
+	log.Debug("GetPendingPayments request", zap.Any("response", response))
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(response)

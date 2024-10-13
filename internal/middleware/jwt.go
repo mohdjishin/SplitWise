@@ -23,6 +23,7 @@ const authorization = "Authorization"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Debug("Auth middleware", zap.Any("request-url", r.URL))
 		authHeader := r.Header.Get(authorization)
 		if authHeader == "" {
 			log.Error("Authorization header not found")

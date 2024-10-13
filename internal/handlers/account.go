@@ -37,6 +37,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode((errors.ErrBadRequest))
 		return
 	}
+	log.Debug("Register request", zap.Any("request", input))
 	if err := validate.ValidateStruct(input); err != nil {
 		log.Error("Error validating request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)
@@ -84,6 +85,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode((errors.ErrBadRequest))
 		return
 	}
+	log.Debug("Login request", zap.Any("request", input))
 	if err := validate.ValidateStruct(input); err != nil {
 		log.Error("Error validating request body", zap.Any("error", err))
 		w.WriteHeader(http.StatusBadRequest)

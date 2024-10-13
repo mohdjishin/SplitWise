@@ -38,6 +38,7 @@ import (
 // @Router /v1/groups/report [post]
 func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 	log.Info("GetGroupReport handler called")
+
 	var req dto.GetGroupReportRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error("Invalid request payload", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
@@ -45,6 +46,7 @@ func GetGroupReport(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(errors.ErrInvalidInput)
 		return
 	}
+	log.Debug("GetGroupReport request", zap.Any("request", req))
 	userId := middleware.GetCurrentUserId(r)
 	var user models.User
 	if err := db.GetDb().Select("name").Where("id = ?", userId).First(&user).Error; err != nil {

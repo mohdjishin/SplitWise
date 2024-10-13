@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -61,10 +62,11 @@ func init() {
 }
 
 func getLogLevelFromEnv() zapcore.Level {
-
+	fmt.Println("Getting log level from env")
+	fmt.Println("LOG_LEVEL: ", os.Getenv("LOG_LEVEL"))
 	logLevel := os.Getenv("LOG_LEVEL")
 	if logLevel == "" {
-		logLevel = "INFO"
+		logLevel = "DEBUG"
 	}
 	switch logLevel {
 	case "DEBUG":
@@ -130,4 +132,8 @@ func Panic(msg string, fields ...zap.Field) {
 // sunc is not needed as of now. can be used in main.go
 func Sync() {
 	LoggerInstance.Sync()
+}
+
+func SetLogLevel(logLevel string) {
+	os.Setenv("LOG_LEVEL", logLevel)
 }

@@ -18,16 +18,18 @@ import (
 const done = "DONE"
 
 func MarkPayment(w http.ResponseWriter, r *http.Request) {
-	var input struct {
+	var input struct { //TODO: move this out.
 		GroupID uint   `json:"groupId"`
 		Remarks string `json:"remarks"`
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Error("Invalid request payload", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(errors.ErrInvalidInput)
 		return
 	}
+	log.Debug("MarkPayment request", zap.Any("request", input))
 
 	userID := middleware.GetCurrentUserId(r)
 
