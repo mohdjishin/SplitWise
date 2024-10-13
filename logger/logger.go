@@ -105,8 +105,8 @@ func (l *Logger) Panic(msg string, fields ...zap.Field) {
 	l.zapLogger.Panic(msg, fields...)
 }
 
-func (l *Logger) Sync() {
-	_ = l.zapLogger.Sync()
+func (l *Logger) Sync() error {
+	return l.zapLogger.Sync()
 }
 
 // wrapper func's
@@ -130,8 +130,8 @@ func Panic(msg string, fields ...zap.Field) {
 }
 
 // sunc is not needed as of now. can be used in main.go
-func Sync() {
-	LoggerInstance.Sync()
+func Sync() error {
+	return LoggerInstance.Sync()
 }
 
 func SetLogLevel(logLevel string) {

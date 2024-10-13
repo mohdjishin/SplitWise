@@ -1,12 +1,9 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/mohdjishin/SplitWise/config"
 	_ "github.com/mohdjishin/SplitWise/docs"
+	"github.com/mohdjishin/SplitWise/internal/app"
 	_ "github.com/mohdjishin/SplitWise/internal/db"
-	"github.com/mohdjishin/SplitWise/internal/routes"
 	log "github.com/mohdjishin/SplitWise/logger"
 	"go.uber.org/zap/zapcore"
 )
@@ -17,28 +14,9 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
-	if err := run(); err != nil {
+	app := app.New()
+	if err := app.Run(); err != nil {
 		log.Error("Error starting server", zapcore.Field{Key: "error", Type: zapcore.ErrorType, Interface: err})
-		return
 	}
-}
 
-func run() error {
-	defer log.Sync()
-
-	port := config.GetConfig().Port
-	log.Info("Starting server on port " + port)
-
-	serverAddr := ":" + port
-	// TODO: if needed timeout
-	// srv := &http.Server{
-	// 	Addr:         serverAddr,
-	// 	ReadTimeout:  5 * time.Second,
-	// 	WriteTimeout: 10 * time.Second,
-	// }
-	//  srv.ListenAndServe()
-	if err := http.ListenAndServe(serverAddr, routes.NewRouter()); err != nil {
-		return err
-	}
-	return nil
 }
